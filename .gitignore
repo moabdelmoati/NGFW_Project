@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Keep package-lock.json in frontend, but ignore empty ones elsewhere
+backend/package-lock.json
+
+# Test results
+*_test_results.json
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# ML Models (large files - consider using Git LFS)
+*.joblib
+*.pkl
+*.h5
+*.pb
+*.onnx
+*.txt
+*.parquet
+
+# Large datasets (consider using Git LFS or external storage)
+datasets/*.csv
+datasets/*.parquet
+ml/IDS2018/*.csv
+ml/sampled_*.csv
+ml/sampled_*.parquet
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+docker-compose.override.yml
+
+# Build artifacts
+frontend-react/build/
+*.map
+
+# Logs
+*.log
+logs/
+backend/data/suricata_logs/*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+

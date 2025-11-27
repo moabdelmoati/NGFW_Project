@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blocked URL - NGFW Security</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      color: #e6edf3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+      padding: 50px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 600px;
+      border: 3px solid rgba(239, 68, 68, 0.6);
+      box-shadow: 0 12px 48px rgba(239, 68, 68, 0.4);
+      animation: slideIn 0.4s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .icon {
+      font-size: 80px;
+      margin-bottom: 24px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+    
+    h1 {
+      color: #ef4444;
+      margin-bottom: 16px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .message {
+      color: #e6edf3;
+      margin-bottom: 24px;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    
+    .url-box {
+      background: rgba(239, 68, 68, 0.1);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .url {
+      color: #9aa6b2;
+      font-size: 14px;
+      word-break: break-all;
+      margin: 0;
+    }
+    
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    
+    button {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-back {
+      background: linear-gradient(135deg, #58a6ff 0%, #7ee787 100%);
+      color: #fff;
+    }
+    
+    .btn-back:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 20px rgba(88, 166, 255, 0.4);
+    }
+    
+    .btn-report {
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid rgba(239, 68, 68, 0.5);
+      color: #ef4444;
+    }
+    
+    .btn-report:hover {
+      background: rgba(239, 68, 68, 0.3);
+      transform: scale(1.05);
+    }
+    
+    .footer {
+      color: #6e7681;
+      margin-top: 24px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🚫</div>
+    <h1>Blocked URL - NGFW Security</h1>
+    <p class="message">This URL has been blocked as suspicious</p>
+    <div class="buttons">
+      <button class="btn-back" onclick="goBack()">Go Back</button>
+      <button class="btn-report" onclick="reportFalsePositive()">Report False Positive</button>
+    </div>
+    <p class="footer">🛡️ Blocked by NGFW</p>
+  </div>
+
+  <script>
+    // Get URL from query parameter (for reporting purposes)
+    const urlParams = new URLSearchParams(window.location.search);
+    const blockedUrl = urlParams.get('url') || 'Unknown URL';
+    const tabId = parseInt(urlParams.get('tabId')) || null;
+
+    function goBack() {
+      console.log('goBack called, tabId:', tabId);
+      try {
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+          const targetTabId = tabId || null;
+          
+          if (targetTabId) {
+            // استخدام tabId المحدد
+            chrome.tabs.get(targetTabId, function(tab) {
+              if (chrome.runtime.lastError) {
+                console.error('Error getting tab:', chrome.runtime.lastError);
+                // Fallback: اذهب إلى about:blank
+                chrome.tabs.update(targetTabId, { url: 'about:blank' });
+                return;
+              }
+              
+              // محاولة الحصول على URL السابق من storage
+              chrome.storage.local.get([`prevUrl_${targetTabId}`], function(result) {
+                const prevUrl = result[`prevUrl_${targetTabId}`];
+                console.log('Previous URL:', prevUrl);
+                
+                if (prevUrl && prevUrl !== 'about:blank') {
+                  // العودة إلى URL السابق
+                  chrome.tabs.update(targetTabId, { url: prevUrl }, function() {
+                    if (chrome.runtime.lastError) {
+                      console.error('Error navigating:', chrome.runtime.lastError);
+                      chrome.tabs.update(targetTabId, { url: 'about:blank' });
+                    } else {
+                      // حذف URL السابق من storage
+                      chrome.storage.local.remove([`prevUrl_${targetTabId}`]);
+                    }
+                  });
+                } else {
+                  // إذا لم يكن هناك URL سابق، اذهب إلى about:blank
+                  chrome.tabs.update(targetTabId, { url: 'about:blank' });
+                }
+              });
+            });
+          } else {
+            // إذا لم يكن tabId متاحاً، استخدم query للتبويب الحالي
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+              if (chrome.runtime.lastError) {
+                console.error('Error querying tabs:', chrome.runtime.lastError);
+                return;
+              }
+              
+              if (tabs && tabs[0]) {
+                const currentTabId = tabs[0].id;
+                chrome.storage.local.get([`prevUrl_${currentTabId}`], function(result) {
+                  const prevUrl = result[`prevUrl_${currentTabId}`];
+                  if (prevUrl && prevUrl !== 'about:blank') {
+                    chrome.tabs.update(currentTabId, { url: prevUrl });
+                    chrome.storage.local.remove([`prevUrl_${currentTabId}`]);
+                  } else {
+                    chrome.tabs.update(currentTabId, { url: 'about:blank' });
+                  }
+                });
+              }
+            });
+          }
+        } else {
+          console.error('Chrome API not available');
+          // Fallback: استخدام window.history
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = 'about:blank';
+          }
+        }
+      } catch (error) {
+        console.error('Error in goBack:', error);
+        // Fallback: استخدام window.history
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.href = 'about:blank';
+        }
+      }
+    }
+
+    function reportFalsePositive() {
+      console.log('reportFalsePositive called, blockedUrl:', blockedUrl);
+      try {
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+          chrome.runtime.sendMessage({
+            action: 'reportFalsePositive',
+            url: blockedUrl
+          }, function(response) {
+            if (chrome.runtime.lastError) {
+              console.error('Error sending report:', chrome.runtime.lastError);
+              alert('Error sending report: ' + chrome.runtime.lastError.message);
+            } else {
+              console.log('Report sent successfully:', response);
+              alert('Thank you! Report has been sent. The URL will be reviewed and removed from blocked list.');
+              
+              // محاولة العودة بعد الإبلاغ
+              setTimeout(() => {
+                goBack();
+              }, 1000);
+            }
+          });
+        } else {
+          console.error('Chrome runtime not available');
+          alert('Extension API not available. Please reload the extension.');
+        }
+      } catch (error) {
+        console.error('Error in reportFalsePositive:', error);
+        alert('Error sending report: ' + error.message);
+      }
+    }
+    
+    // التأكد من أن الدوال متاحة عالمياً
+    window.goBack = goBack;
+    window.reportFalsePositive = reportFalsePositive;
+    
+    console.log('Blocked page loaded. tabId:', tabId, 'blockedUrl:', blockedUrl);
+  </script>
+</body>
+</html>
+
+

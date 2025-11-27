@@ -1,0 +1,47 @@
+# Suricata Rules for URL Detection and Blocking
+# These rules detect malicious URLs and trigger alerts
+
+# Phishing URL Detection - Typosquatting
+alert http any any -> any any (msg:"Phishing URL - Typosquatting detected"; flow:established,to_server; http.uri; content:"go.ogle"; nocase; sid:1000001; rev:1;)
+alert http any any -> any any (msg:"Phishing URL - Typosquatting detected"; flow:established,to_server; http.uri; content:"yotube"; nocase; sid:1000002; rev:1;)
+alert http any any -> any any (msg:"Phishing URL - Typosquatting detected"; flow:established,to_server; http.uri; content:"facebok"; nocase; sid:1000003; rev:1;)
+alert http any any -> any any (msg:"Phishing URL - Typosquatting detected"; flow:established,to_server; http.uri; content:"amazom"; nocase; sid:1000004; rev:1;)
+alert http any any -> any any (msg:"Phishing URL - Typosquatting detected"; flow:established,to_server; http.uri; content:"paypall"; nocase; sid:1000005; rev:1;)
+
+# Suspicious URL Patterns
+alert http any any -> any any (msg:"Suspicious URL - Shortened URL service"; flow:established,to_server; http.host; content:"bit.ly"; nocase; sid:1000010; rev:1;)
+alert http any any -> any any (msg:"Suspicious URL - Shortened URL service"; flow:established,to_server; http.host; content:"tinyurl.com"; nocase; sid:1000011; rev:1;)
+alert http any any -> any any (msg:"Suspicious URL - Shortened URL service"; flow:established,to_server; http.host; content:"t.co"; nocase; sid:1000012; rev:1;)
+
+# Malicious URL Patterns
+alert http any any -> any any (msg:"Malicious URL - Phishing site detected"; flow:established,to_server; http.host; content:"phishing"; nocase; sid:1000020; rev:1;)
+alert http any any -> any any (msg:"Malicious URL - Suspicious domain"; flow:established,to_server; http.host; content:"example-phishing"; nocase; sid:1000021; rev:1;)
+alert http any any -> any any (msg:"Malicious URL - Suspicious domain"; flow:established,to_server; http.host; content:"bic-wswhatsapp"; nocase; sid:1000022; rev:1;)
+
+# SQL Injection in URL
+alert http any any -> any any (msg:"SQL Injection detected in URL"; flow:established,to_server; http.uri; content:"union select"; nocase; sid:1000030; rev:1;)
+alert http any any -> any any (msg:"SQL Injection detected in URL"; flow:established,to_server; http.uri; content:"' or '1'='1"; nocase; sid:1000031; rev:1;)
+alert http any any -> any any (msg:"SQL Injection detected in URL"; flow:established,to_server; http.uri; content:"drop table"; nocase; sid:1000032; rev:1;)
+
+# XSS in URL
+alert http any any -> any any (msg:"XSS attack detected in URL"; flow:established,to_server; http.uri; content:"<script"; nocase; sid:1000040; rev:1;)
+alert http any any -> any any (msg:"XSS attack detected in URL"; flow:established,to_server; http.uri; content:"javascript:"; nocase; sid:1000041; rev:1;)
+
+# Path Traversal
+alert http any any -> any any (msg:"Path traversal detected in URL"; flow:established,to_server; http.uri; content:"../"; sid:1000050; rev:1;)
+alert http any any -> any any (msg:"Path traversal detected in URL"; flow:established,to_server; http.uri; content:"..\\"; sid:1000051; rev:1;)
+
+# Command Injection
+alert http any any -> any any (msg:"Command injection detected in URL"; flow:established,to_server; http.uri; content:"|cat"; nocase; sid:1000060; rev:1;)
+alert http any any -> any any (msg:"Command injection detected in URL"; flow:established,to_server; http.uri; content:";ls"; nocase; sid:1000061; rev:1;)
+
+# Suspicious File Extensions
+alert http any any -> any any (msg:"Suspicious file extension in URL"; flow:established,to_server; http.uri; content:".exe"; nocase; sid:1000070; rev:1;)
+alert http any any -> any any (msg:"Suspicious file extension in URL"; flow:established,to_server; http.uri; content:".bat"; nocase; sid:1000071; rev:1;)
+alert http any any -> any any (msg:"Suspicious file extension in URL"; flow:established,to_server; http.uri; content:".sh"; nocase; sid:1000072; rev:1;)
+
+# High-risk domains (add more as needed)
+alert http any any -> any any (msg:"High-risk domain detected"; flow:established,to_server; http.host; content:".cc"; nocase; sid:1000080; rev:1;)
+alert http any any -> any any (msg:"High-risk domain detected"; flow:established,to_server; http.host; content:".tk"; nocase; sid:1000081; rev:1;)
+
+

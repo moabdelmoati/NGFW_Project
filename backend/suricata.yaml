@@ -1,0 +1,77 @@
+%YAML 1.1
+---
+# Suricata configuration for NGFW Project
+# URL detection and blocking with IDS/IPS mode
+
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+  port-groups:
+    HTTP_PORTS: "[80,443,8080,8443]"
+    SSH_PORTS: "[22]"
+
+default-log-dir: ./data/suricata_logs
+
+# Rule files
+default-rule-path: ./rules
+rule-files:
+  - url_detection.rules
+
+# App layer settings
+app-layer:
+  protocols:
+    http:
+      enabled: yes
+      libhtp:
+        default-config:
+          personality: IDS
+          request-body-limit: 100kb
+          response-body-limit: 100kb
+    tls:
+      enabled: yes
+      detection-ports:
+        dp: 443
+    dns:
+      enabled: yes
+      detection-ports:
+        dp: 53
+
+# Outputs
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert
+        - dns
+        - http
+        - tls
+        - ssh
+        - flow
+      # Include full HTTP data for URL analysis
+      http:
+        extended: yes
+        custom: [hostname, url, http_user_agent, http_content_type, http_method, http_cookie, http_refer]
+      # Include TLS data for SNI extraction
+      tls:
+        extended: yes
+        custom: [sni, subject, issuer, fingerprint]
+
+# Logging
+logging:
+  default-log-level: info
+  outputs:
+    - console:
+        enabled: yes
+    - file:
+        enabled: yes
+        filename: suricata.log
+        level: info
+
+# IPS mode (set to 'yes' to enable blocking)
+# Note: Requires appropriate permissions and network setup
+ips:
+  enabled: yes
+  mode: auto
